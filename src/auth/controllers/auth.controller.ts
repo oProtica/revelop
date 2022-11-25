@@ -97,17 +97,4 @@ export class AuthController {
     }
     await this.userService.enableTwoFa(request.user.id);
   }
-
-  //discord
-  @Get('discord/login')
-  @UseGuards(DiscordGuard)
-  handleLogin() {
-    return { hi: 'fuck you' };
-  }
-
-  @Get('discord/redirect')
-  @UseGuards(DiscordGuard)
-  handleRedirect() {
-    return { msg: 'ok' };
-  }
 }

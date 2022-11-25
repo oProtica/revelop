@@ -4,7 +4,7 @@ import { AuthController } from './controllers/auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtGuard } from './guards/jwt.guard';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { DiscordStrategy } from './guards/discord.strategy';
+// TODO: Import discord strategy and guard
 import { UserService } from 'src/users/services/users.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/users/models/user.entity';
@@ -30,11 +30,11 @@ console.log(process.env.JWT_EXPIRE);
     TwoFaService,
     JwtGuard,
     JwtStrategy,
+    // TODO: Add Discord strategy and guard
     RefreshJwtGuard,
     RefreshJwtStrategy,
     LocalGuard,
     LocalStrategy,
-    DiscordStrategy,
   ],
   controllers: [AuthController],
 })
