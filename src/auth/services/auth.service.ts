@@ -1,94 +1,91 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { InjectRepository } from '@nestjs/typeorm';
-
 import * as bcrypt from 'bcrypt';
-import { from, Observable } from 'rxjs';
-import { switchMap, map } from 'rxjs/operators';
-import { Repository } from 'typeorm';
-import { UserEntity } from '../models/user.entity';
-import { User } from '../models/user.interface';
-
-import { MessagingService, OpenCloud } from 'rbxcloud';
+import { CreateUserDto } from 'src/users/dto/createUser.dto';
+import { UserService } from 'src/users/services/users.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(UserEntity)
-    private readonly userRepository: Repository<UserEntity>,
-    private jwtService: JwtService,
+    private readonly usersService: UserService,
+    private readonly jwtService: JwtService,
   ) {}
 
-  hashPassword(password: string): Observable<string> {
-    return from(bcrypt.hash(password, 12));
+  public createAccessJwt(userId: string) {
+    const payload = { userId };
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.JWT_SECRET,
+      expiresIn: parseInt(process.env.JWT_EXPIRE),
+    });
+    return token;
+  }
+
+  public createRefreshJWT(userId: string) {
+    const payload = { userId };
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.REFRESH_SECRET,
+      expiresIn: parseInt(process.env.REFRESH_EXPIRE),
+    });
+    this.usersService.setRefreshToken(token, userId);
+    return token;
+  }
+
+  private hashPassword(password: string) {
+    return bcrypt.hash(password, 12);
+  }
+
+  private async verifyPassword(password: string, hashedPassword: string) {
+    const match = await bcrypt.compare(password, hashedPassword);
+    if (!match) {
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  public getUserFromJwt(token: string) {
+    const payload = this.jwtService.verify(token, {
+      secret: process.env.JWT_SECRET,
+    });
+    if (payload.userId) {
+      return this.usersService.getById(payload.userId);
+    }
   }
 
   // Signup
-  signup(user: User): Observable<User> {
-    const { firstName, lastName, email, password } = user;
+  public async signup(userData: CreateUserDto) {
+    const hashedPassword = await this.hashPassword(userData.password);
 
-    return this.hashPassword(password).pipe(
-      switchMap((hashedPassword: string) => {
-        return from(
-          this.userRepository.save({
-            firstName,
-            lastName,
-            email,
-            password: hashedPassword,
-          }),
-        ).pipe(
-          map((user: User) => {
-            delete user.password;
-            return user;
-          }),
+    try {
+      const createdUser = await this.usersService.create({
+        ...userData,
+        password: hashedPassword,
+      });
+      createdUser.password = undefined;
+      return createdUser;
+    } catch (error) {
+      if (error?.code === '23505') {
+        throw new HttpException(
+          'User with that email or username already exists',
+          HttpStatus.BAD_REQUEST,
         );
-      }),
-    );
+      } else {
+        console.log(error);
+        throw new HttpException(
+          'Something went wrong',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+    }
   }
 
-  validateUser(email: string, password: string): Observable<User> {
-    return from(
-      this.userRepository.findOne({
-        where: { email },
-        select: ['id', 'firstName', 'lastName', 'email', 'password', 'role'],
-      }),
-    ).pipe(
-      switchMap((user: User) =>
-        from(bcrypt.compare(password, user.password)).pipe(
-          map((isValidPassword: boolean) => {
-            if (isValidPassword) {
-              delete user.password;
-              return user;
-            }
-          }),
-        ),
-      ),
-    );
-  }
-
-  signin(user: User): Observable<string> {
-    const { email, password } = user;
-    return this.validateUser(email, password).pipe(
-      switchMap((user: User) => {
-        if (user) {
-          // Create jwt - credentials
-          return from(this.jwtService.signAsync({ user }));
-        }
-      }),
-    );
-  }
-
-  announce(topic: string, message: string): Observable<any> {
-    OpenCloud.Configure({
-      DataStoreService: process.env.Cloud_DataStoreService, // Unless set DataStoreService.RegisterAPIKey('API-KEY'), all DataStoreService calls will use this key by default
-      MessagingService: process.env.Cloud_MessagingService, // Unless set MessagingService.RegisterAPIKey('API-KEY'), all MessagingService calls will use this key by default
-      UniverseID: 3731136958, //UniverseId
-    });
-
-    return from(
-      MessagingService.PublishAsync(topic, message).catch((err) => {
-        console.error(err);
-      }),
-    );
+  public async signin(email: string, password: string) {
+    try {
+      const user = await this.usersService.getByEmail(email);
+      await this.verifyPassword(password, user.password);
+      user.password = undefined;
+      return user;
+    } catch (error) {
+      console.log(error);
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    }
   }
 }

@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { from, Observable } from 'rxjs';
-import { User } from 'src/auth/models/user.interface';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { CreatePostDto } from '../dto/CreatePost.dto';
+import { UpdatePostDto } from '../dto/updatePost.dto';
 import { FeedPostEntity } from '../models/post.entity';
 import { FeedPost } from '../models/post.interface';
 
@@ -13,17 +14,17 @@ export class FeedService {
     private readonly feedPostRepository: Repository<FeedPostEntity>,
   ) {}
 
-  createPost(user: User, feedPost: FeedPost): Observable<FeedPost> {
-    feedPost.author = user;
-    return from(this.feedPostRepository.save(feedPost));
+  createPost(user, post: CreatePostDto): Observable<FeedPost> {
+    const newPost = { ...post, author: user };
+    return from(this.feedPostRepository.save(newPost));
   }
 
   findAllPosts(): Observable<FeedPost[]> {
     return from(this.feedPostRepository.find());
   }
 
-  updatePost(id: number, feedPost: FeedPost): Observable<UpdateResult> {
-    return from(this.feedPostRepository.update(id, feedPost));
+  updatePost(id: number, post: UpdatePostDto): Observable<UpdateResult> {
+    return from(this.feedPostRepository.update(id, post));
   }
 
   deletePost(id: number): Observable<DeleteResult> {

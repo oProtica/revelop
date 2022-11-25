@@ -1,4 +1,4 @@
-import { User } from 'src/auth/models/user.interface';
+import { User } from 'src/users/models/user.interface';
 
 export interface FeedPost {
   id?: number;
