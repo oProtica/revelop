@@ -10,9 +10,9 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { DiscordGuard } from '../guards/discord.guard';
+
 import { AuthService } from '../services/auth.service';
-import { CreateUserDto } from 'src/users/dto/createUser.dto';
+import { CreateUserDto } from '../../users/dto/CreateUser.dto';
 import { LocalGuard } from '../guards/local.guard';
 import RequestWithUser from '../requestWithUser.interface';
 import { JwtGuard } from '../guards/jwt.guard';
