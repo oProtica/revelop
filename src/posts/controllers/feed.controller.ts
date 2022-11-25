@@ -12,7 +12,7 @@ import {
 import { Observable } from 'rxjs';
 import { JwtGuard } from 'src/auth/guards/jwt.guard';
 import { DeleteResult, UpdateResult } from 'typeorm';
-import { CreatePostDto } from '../dto/CreatePost.dto';
+import { createPostDto } from '../dto/createPost.dto';
 import { UpdatePostDto } from '../dto/updatePost.dto';
 import { FeedPost } from '../models/post.interface';
 import { FeedService } from '../services/feed.service';
@@ -23,7 +23,7 @@ export class FeedController {
 
   @Post()
   @UseGuards(JwtGuard)
-  create(@Body() post: CreatePostDto, @Request() req): Observable<FeedPost> {
+  create(@Body() post: createPostDto, @Request() req): Observable<FeedPost> {
     return this.feedService.createPost(req.user, post);
   }
 

@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from '../../users/dto/CreateUser.dto';
+import { createUserDto } from '../../users/dto/createUser.dto';
 import { UserService } from '../../users/services/users.service';
 
 @Injectable()
@@ -51,7 +51,7 @@ export class AuthService {
   }
 
   // Signup
-  public async signup(userData: CreateUserDto) {
+  public async signup(userData: createUserDto) {
     const hashedPassword = await this.hashPassword(userData.password);
 
     try {

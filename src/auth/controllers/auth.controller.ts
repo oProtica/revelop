@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 
 import { AuthService } from '../services/auth.service';
-import { CreateUserDto } from '../../users/dto/CreateUser.dto';
+import { createUserDto } from '../../users/dto/createUser.dto';
 import { LocalGuard } from '../guards/local.guard';
 import RequestWithUser from '../requestWithUser.interface';
 import { JwtGuard } from '../guards/jwt.guard';
@@ -33,7 +33,7 @@ export class AuthController {
 
   @Post('signup')
   @HttpCode(HttpStatus.CREATED)
-  signup(@Body() user: CreateUserDto) {
+  signup(@Body() user: createUserDto) {
     return this.authService.signup(user);
   }
 

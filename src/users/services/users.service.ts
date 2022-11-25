@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CreateUserDto } from '../dto/createUser.dto';
+import { createUserDto } from '../dto/createUser.dto';
 import { User } from '../models/user.entity';
 import * as bcrypt from 'bcrypt';
 
@@ -59,7 +59,7 @@ export class UserService {
     });
   }
 
-  async create(userData: CreateUserDto) {
+  async create(userData: createUserDto) {
     const newUser = await this.usersRepository.save(userData);
 
     return newUser;
